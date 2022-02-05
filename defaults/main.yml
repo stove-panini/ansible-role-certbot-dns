@@ -10,11 +10,11 @@ certbot_dns_domains:
 # server to verify the DNS record
 certbot_dns_propagation_seconds: 10
 
+# ACME directory resource URI
+certbot_dns_server: https://acme-v02.api.letsencrypt.org/directory
+
 # DNS provider name. As provided to the --dns-<provider> option
 certbot_dns_provider: cloudflare
-
-# ACME directory resource URI
-certbot_dns_server:  https://acme-v02.api.letsencrypt.org/directory
 
 # INI-file containing credentials for your DNS provider
 certbot_dns_credentials_file: /etc/letsencrypt/{{ certbot_dns_provider }}.ini
