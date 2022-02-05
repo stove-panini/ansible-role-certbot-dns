@@ -1,0 +1,26 @@
+---
+# Email address for important account notifications
+certbot_dns_email: me@example.com
+
+# List of domains to be used as subjects for the certificate
+certbot_dns_domains:
+  - "{{ ansible_fqdn }}"
+
+# The number of seconds to wait for DNS to propagate before asking the ACME
+# server to verify the DNS record
+certbot_dns_propagation_seconds: 10
+
+# DNS provider name. As provided to the --dns-<provider> option
+certbot_dns_provider: cloudflare
+
+# ACME directory resource URI
+certbot_dns_server:  https://acme-v02.api.letsencrypt.org/directory
+
+# INI-file containing credentials for your DNS provider
+certbot_dns_credentials_file: /etc/letsencrypt/{{ certbot_dns_provider }}.ini
+
+# INI-file contents
+# ref: https://eff-certbot.readthedocs.io/en/stable/using.html#dns-plugins
+certbot_dns_credentials:
+  dns_cloudflare_email: webadmin@example.com
+  dns_cloudflare_api_key: abcd-1234

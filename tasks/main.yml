@@ -1,0 +1,34 @@
+---
+- name: Install Certbot and DNS plugins
+  package:
+    state: present
+    name:
+      - certbot
+      - python3-certbot-dns-{{ certbot_dns_provider }}
+
+- name: Generate DNS credentials config
+  template:
+    dest: "{{ certbot_dns_credentials_file }}"
+    src: credentials.ini.j2
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Request certificate for domain(s)
+  command:
+    cmd: >
+      certbot certonly -n --agree-tos
+        -m {{ certbot_dns_email }}
+        --server {{ certbot_dns_server }}
+        --dns-{{ certbot_dns_provider }}
+        --dns-{{ certbot_dns_provider }}-credentials {{ certbot_dns_credentials_file }}
+        --dns-{{ certbot_dns_provider }}-propagation-seconds {{ certbot_dns_propagation_seconds }}
+        -d {{ certbot_dns_domains | join(',') }}
+    creates: /etc/letsencrypt/live/{{ certbot_dns_domains[0] }}
+    warn: false
+
+- name: Enable renewal timer
+  service:
+    name: certbot-renew.timer
+    enabled: true
+    state: started
