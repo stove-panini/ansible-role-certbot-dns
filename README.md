@@ -71,7 +71,7 @@ A more featureful example using the LetsEncrypt staging server and hooks
           post_hook: systemctl restart tomcat
 ```
 
-I've also included a small program that will copy your certs to a custom directory. You can use this with a deploy hook. See [files/certbot-copy-files](blob/master/files/certbot-copy-files) for usage details.
+I've also included a small program that will copy your certs to a custom directory. You can use this with a deploy hook. See [files/certbot-copy-files](files/certbot-copy-files) for usage details.
 ``` yaml
 - hosts: servers
   roles:
