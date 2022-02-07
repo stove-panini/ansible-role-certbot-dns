@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+usage() {
+    cat <<EOF
+$(basename "$0"), copies LetsEncrypt files to specified destinations
+Usage: $(basename "$0") [options] CERT_NAME
+
+Options:
+    -c CERT_DEST        Copy destination for cert.pem
+    -n CHAIN_DEST       Copy destination for chain.pem
+    -f FULLCHAIN_DEST   Copy destination for fullchain.pem
+    -k KEY_DEST         Copy destination for privkey.pem
+    -o OWNER            Owner of copied files
+    -g GROUP            Group owner of copied files
+
+Example:
+    $(basename "$0") -c /opt/app/foo.crt -k /opt/app/foo.key foo.example.com
+
+EOF
+}
+
+die() {
+    echo "$@" >&2
+    exit 1
+}
+
+copy() {
+    local src dest
+    src="$(readlink -f "${CERT_DIR}/$1")"
+    dest="$2"
+
+    [[ -d $dest ]] || mkdir -p "${dest%/*}"
+    cp -f "$src" "$dest"
+    chown "$OWNER":"$GROUP" "$dest"
+}
+
+while getopts ":c:n:f:k:o:g:" opt; do
+    case "$opt" in
+        c) CERT_DEST="$OPTARG"  ;;
+        n) CHAIN_DEST="$OPTARG"  ;;
+        f) FULLCHAIN_DEST="$OPTARG" ;;
+        k) KEY_DEST="$OPTARG" ;;
+        o) OWNER="$OPTARG" ;;
+        g) GROUP="$OPTARG" ;;
+        *) usage && exit ;;
+    esac
+done
+shift $((OPTIND-1))
+
+CERT_DOMAIN="$1"
+CERT_DIR="/etc/letsencrypt/live/$CERT_DOMAIN"
+OWNER="${OWNER:-root}"
+GROUP="${GROUP:-$OWNER}"
+
+[[ $# -eq 1 ]] || die "Please provide a single cert name."
+[[ -d $CERT_DIR ]] || die "$CERT_DIR not found."
+
+[[ -n $CERT_DEST ]] && copy cert.pem "$CERT_DEST"
+[[ -n $CHAIN_DEST ]] && copy chain.pem "$CHAIN_DEST"
+[[ -n $FULLCHAIN_DEST ]] && copy fullchain.pem "$FULLCHAIN_DEST"
+[[ -n $KEY_DEST ]] && copy privkey.pem "$KEY_DEST"
+exit 0 # because the key test will exit non-zero if undefined

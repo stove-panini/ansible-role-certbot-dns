@@ -6,29 +6,53 @@
       - certbot
       - python3-certbot-dns-{{ certbot_dns_provider }}
 
+- name: Add certbot-copy-files script
+  copy:
+    dest: /usr/local/bin/certbot-copy-files
+    content: "{{ lookup('file', 'certbot-copy-files') }}"
+    owner: root
+    group: root
+    mode: 0755
+  when: certbot_dns_add_script|bool
+
 - name: Generate DNS credentials config
   template:
     dest: "{{ certbot_dns_credentials_file }}"
-    src: credentials.ini.j2
+    src: credentials.j2
     owner: root
     group: root
     mode: 0600
+  when: certbot_dns_provider != 'route53'
 
 - name: Request certificate for domain(s)
   command:
-    cmd: >
-      certbot certonly -n --agree-tos
+    cmd: >-
+      certbot certonly -n --agree-tos --preferred-challenges dns
         -m {{ certbot_dns_email }}
-        --server {{ certbot_dns_server }}
         --dns-{{ certbot_dns_provider }}
-        --dns-{{ certbot_dns_provider }}-credentials {{ certbot_dns_credentials_file }}
-        --dns-{{ certbot_dns_provider }}-propagation-seconds {{ certbot_dns_propagation_seconds }}
+        {% if certbot_dns_provider != 'route53' %}
+        --dns-{{ certbot_dns_provider }}-credentials {{ certbot_dns_credentials_file | quote }}
+        {% endif %}
+        {% for k, v in certbot_dns_configuration.items() %}
+        --{{ k | regex_replace('_', '-') }} {{ (v | quote) if v is not none }}
+        {% endfor %}
         -d {{ certbot_dns_domains | join(',') }}
     creates: /etc/letsencrypt/live/{{ certbot_dns_domains[0] }}
     warn: false
 
+- name: Force renewal of cert
+  command:
+    cmd: >
+      certbot renew --force-renewal
+        --cert-name "{{ certbot_dns_domains[0] }}"
+        {% for k, v in certbot_dns_configuration.items() %}
+        --{{ k | regex_replace('_', '-') }} {{ (v | quote) if v is not none }}
+        {% endfor %}
+    warn: false
+  when: certbot_dns_force_renewal|bool
+
 - name: Enable renewal timer
   service:
+    state: started
     name: certbot-renew.timer
     enabled: true
-    state: started
