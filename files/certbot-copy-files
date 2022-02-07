@@ -10,8 +10,8 @@ Options:
     -n CHAIN_DEST       Copy destination for chain.pem
     -f FULLCHAIN_DEST   Copy destination for fullchain.pem
     -k KEY_DEST         Copy destination for privkey.pem
-    -o OWNER            Owner of copied files
-    -g GROUP            Group owner of copied files
+    -o OWNER            Owner of copied files (default: root)
+    -g GROUP            Group owner of copied files (default: root)
 
 Example:
     $(basename "$0") -c /opt/app/foo.crt -k /opt/app/foo.key foo.example.com
