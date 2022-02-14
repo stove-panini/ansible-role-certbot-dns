@@ -32,6 +32,7 @@ copy() {
     [[ -d $dest ]] || mkdir -p "${dest%/*}"
     cp -f "$src" "$dest"
     chown "$OWNER":"$GROUP" "$dest"
+    [[ $SELINUX == 'Enforcing' ]] && chcon -t cert_t "$dest"
 }
 
 while getopts ":c:n:f:k:o:g:" opt; do
@@ -51,6 +52,7 @@ CERT_DOMAIN="$1"
 CERT_DIR="/etc/letsencrypt/live/$CERT_DOMAIN"
 OWNER="${OWNER:-root}"
 GROUP="${GROUP:-$OWNER}"
+SELINUX="$(getenforce || :)"
 
 [[ $# -eq 1 ]] || die "Please provide a single cert name."
 [[ -d $CERT_DIR ]] || die "$CERT_DIR not found."
