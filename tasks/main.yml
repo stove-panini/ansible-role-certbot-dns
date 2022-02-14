@@ -13,7 +13,7 @@
     owner: root
     group: root
     mode: 0755
-  when: certbot_dns_add_script|bool
+  when: certbot_dns_add_copy_files_script|bool
 
 - name: Generate DNS credentials config
   template:
@@ -42,7 +42,7 @@
 
 - name: Force renewal of cert
   command:
-    cmd: >
+    cmd: >-
       certbot renew --force-renewal
         --cert-name "{{ certbot_dns_domains[0] }}"
         {% for k, v in certbot_dns_configuration.items() %}
